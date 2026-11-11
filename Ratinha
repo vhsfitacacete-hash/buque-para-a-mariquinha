@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Status: Desatualizado ☕🌿</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Canvas Confetti CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        sage: {
+                            50: '#f4f7f4',
+                            100: '#e3ebe4',
+                            200: '#c7d7c9',
+                            300: '#a3c0a6',
+                            400: '#7fa383',
+                            500: '#628766',
+                            600: '#4d6c51',
+                            700: '#3f5642',
+                        },
+                        peach: {
+                            50: '#fff8f5',
+                            100: '#ffeee5',
+                            200: '#ffd6c2',
+                            300: '#ffb694',
+                            400: '#ff9061',
+                            500: '#fb6b35',
+                        },
+                        warmBg: '#fbf9f5',
+                        lavender: '#e8e3f5',
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-8px)' },
+                        },
+                        wiggle: {
+                            '0%, 100%': { transform: 'rotate(-4deg)' },
+                            '50%': { transform: 'rotate(4deg)' },
+                        },
+                        pop: {
+                            '0%': { transform: 'scale(0.8)', opacity: 0 },
+                            '100%': { transform: 'scale(1)', opacity: 1 },
+                        }
+                    },
+                    animation: {
+                        float: 'float 5s ease-in-out infinite',
+                        wiggle: 'wiggle 3s ease-in-out infinite',
+                        pop: 'pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+        }
+
+        .flower-node {
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transform-origin: center center;
+        }
+
+        .flower-node:hover, .flower-node:active {
+            transform: scale(1.15) rotate(5deg);
+            filter: drop-shadow(0 6px 12px rgba(98, 135, 102, 0.25));
+        }
+
+        .bounce-btn {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .bounce-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f4f7f4; }
+        ::-webkit-scrollbar-thumb { background: #a3c0a6; border-radius: 9999px; }
+    </style>
+</head>
+<body class="h-full bg-warmBg text-slate-700 font-sans antialiased overflow-x-hidden selection:bg-peach-200">
+
+    <!-- Ambient Glowing Orbs -->
+    <div class="fixed -top-20 -left-20 w-80 h-80 bg-sage-200/40 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="fixed top-1/3 -right-20 w-96 h-96 bg-peach-200/40 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="fixed -bottom-20 left-1/3 w-80 h-80 bg-lavender/50 rounded-full blur-3xl pointer-events-none"></div>
+
+    <!-- Header Navigation -->
+    <header class="relative z-30 max-w-2xl mx-auto px-4 pt-4 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+            <span class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-sage-100 text-sage-600 font-semibold text-xs shadow-sm">
+                🌱
+            </span>
+            <span class="font-display font-medium text-xs md:text-sm text-slate-500 tracking-wide uppercase">Operação Quebra-Gelo</span>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <!-- Audio Toggle Button -->
+            <button onclick="toggleAudio()" id="audioBtn" class="glass-card px-3 py-1.5 rounded-full text-xs text-slate-600 hover:bg-white transition-all flex items-center gap-1.5 shadow-sm">
+                <i class="fa-solid fa-volume-high text-sage-500"></i>
+                <span id="audioText">Som: On</span>
+            </button>
+
+            <!-- Edit Modal Trigger -->
+            <button onclick="openEditModal()" class="glass-card w-8 h-8 rounded-full text-slate-600 hover:text-sage-600 hover:bg-white transition-all flex items-center justify-center shadow-sm" title="Personalizar este cartão">
+                <i class="fa-solid fa-gear text-sm"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="relative z-20 max-w-md md:max-w-lg mx-auto px-4 py-6 flex flex-col items-center justify-center min-h-[calc(100vh-70px)]">
+
+        <!-- Badge & Title -->
+        <div class="text-center mb-4 animate-float">
+            <span class="inline-block px-3 py-1 rounded-full bg-peach-100 text-peach-500 text-xs font-semibold mb-2 shadow-sm border border-peach-200/50">
+                ⚠️ Alerta de sumiço prolongado
+            </span>
+            <h1 class="text-2xl md:text-3xl font-display font-bold text-slate-800 leading-tight">
+                Status da nossa conversa:<br>
+                <span class="text-sage-600 underline decoration-peach-300 decoration-wavy decoration-2">Desatualizada Há Muito Tempo</span> ⏳
+            </h1>
+        </div>
+
+        <!-- Short Subtitle -->
+        <p class="text-center text-xs md:text-sm text-slate-600 mb-4 max-w-sm">
+            Oi, <span id="displayName" class="font-semibold text-slate-800">Sofia</span>! Faz tanto tempo que não nos falamos que resolvi te mandar este <span class="font-medium text-sage-600">buquê de baixa manutenção</span> pra quebrar o gelo.
+        </p>
+
+        <!-- INTERACTIVE SVG PLANT/BOUQUET -->
+        <div class="relative w-full max-w-[320px] aspect-square my-1 flex items-center justify-center">
+            
+            <!-- Soft Glow behind vase -->
+            <div class="absolute w-60 h-60 bg-gradient-to-tr from-sage-200/60 to-peach-200/60 rounded-full blur-2xl -z-10 animate-pulse"></div>
+
+            <svg viewBox="0 0 400 450" class="w-full h-full drop-shadow-md select-none">
+                <defs>
+                    <linearGradient id="potGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#fff8f5" />
+                        <stop offset="100%" stop-color="#ffd6c2" />
+                    </linearGradient>
+
+                    <linearGradient id="leafGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#a3c0a6" />
+                        <stop offset="100%" stop-color="#4d6c51" />
+                    </linearGradient>
+
+                    <linearGradient id="peachFlower" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#ffeee5" />
+                        <stop offset="100%" stop-color="#ff9061" />
+                    </linearGradient>
+
+                    <linearGradient id="lavenderFlower" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#f3effa" />
+                        <stop offset="100%" stop-color="#b8a7ea" />
+                    </linearGradient>
+                </defs>
+
+                <!-- Vaso Elegante -->
+                <g id="vase" class="drop-shadow-sm">
+                    <path d="M 130 310 L 150 400 Q 200 415 250 400 L 270 310 Z" fill="url(#potGrad)" stroke="#ffb694" stroke-width="2" />
+                    <!-- Borda do Vaso -->
+                    <rect x="120" y="300" width="160" height="16" rx="8" fill="#ffffff" stroke="#ffd6c2" stroke-width="2" />
+                    <!-- Rosto fofo minimalista no vaso -->
+                    <circle cx="180" cy="355" r="3" fill="#628766" />
+                    <circle cx="220" cy="355" r="3" fill="#628766" />
+                    <path d="M 195 365 Q 200 372 205 365" stroke="#628766" stroke-width="2.5" fill="none" stroke-linecap="round" />
+                    <!-- Bochechas rosadas -->
+                    <circle cx="172" cy="360" r="4" fill="#ff9061" opacity="0.4" />
+                    <circle cx="228" cy="360" r="4" fill="#ff9061" opacity="0.4" />
+                </g>
+
+                <!-- Caules e Ramos -->
+                <g id="stems">
+                    <path d="M 200 300 Q 180 220 150 150" stroke="#7fa383" stroke-width="5" fill="none" stroke-linecap="round" />
+                    <path d="M 200 300 Q 200 210 200 110" stroke="#7fa383" stroke-width="6" fill="none" stroke-linecap="round" />
+                    <path d="M 200 300 Q 230 220 260 160" stroke="#7fa383" stroke-width="5" fill="none" stroke-linecap="round" />
+                    <path d="M 200 300 Q 240 250 290 220" stroke="#7fa383" stroke-width="4" fill="none" stroke-linecap="round" />
+                    <path d="M 200 300 Q 150 250 110 210" stroke="#7fa383" stroke-width="4" fill="none" stroke-linecap="round" />
+                </g>
+
+                <!-- Folhinhas de Apoio -->
+                <g id="background-leaves">
+                    <path d="M 170 260 Q 110 250 120 220 Q 160 230 175 255 Z" fill="url(#leafGrad1)" opacity="0.9" />
+                    <path d="M 230 260 Q 290 250 280 220 Q 240 230 225 255 Z" fill="url(#leafGrad1)" opacity="0.9" />
+                </g>
+
+                <!-- FLORES INTERATIVAS (Clicáveis) -->
+
+                <!-- Flor 1: Esquerda (Regador) -->
+                <g class="flower-node" onclick="handleFlowerClick(event, '🚰 Não precisa regar (sobrevive a sumiços!)', 523.25)">
+                    <circle cx="150" cy="150" r="28" fill="url(#peachFlower)" />
+                    <circle cx="150" cy="150" r="12" fill="#fff" />
+                    <circle cx="150" cy="150" r="7" fill="#fb6b35" />
+                    <!-- Pétalas decorativas -->
+                    <circle cx="150" cy="116" r="8" fill="url(#peachFlower)" />
+                    <circle cx="150" cy="184" r="8" fill="url(#peachFlower)" />
+                    <circle cx="116" cy="150" r="8" fill="url(#peachFlower)" />
+                    <circle cx="184" cy="150" r="8" fill="url(#peachFlower)" />
+                </g>
+
+                <!-- Flor 2: Topo Centro (Alergia Zero) -->
+                <g class="flower-node" onclick="handleFlowerClick(event, '🤧 Zero risco de espirros ou alergia!', 659.25)">
+                    <!-- Margarida grande -->
+                    <g fill="#ffffff" stroke="#e3ebe4" stroke-width="1.5">
+                        <circle cx="200" cy="80" r="12" />
+                        <circle cx="200" cy="140" r="12" />
+                        <circle cx="170" cy="110" r="12" />
+                        <circle cx="230" cy="110" r="12" />
+                        <circle cx="178" cy="88" r="12" />
+                        <circle cx="222" cy="132" r="12" />
+                        <circle cx="178" cy="132" r="12" />
+                        <circle cx="222" cy="88" r="12" />
+                    </g>
+                    <circle cx="200" cy="110" r="16" fill="#ffb694" />
+                    <circle cx="200" cy="110" r="8" fill="#fb6b35" />
+                </g>
+
+                <!-- Flor 3: Direita (Validade Indeterminada) -->
+                <g class="flower-node" onclick="handleFlowerClick(event, '⏳ Validade: indeterminada (dura até o café!)', 783.99)">
+                    <circle cx="260" cy="160" r="26" fill="url(#lavenderFlower)" />
+                    <circle cx="260" cy="160" r="14" fill="#ffffff" />
+                    <circle cx="260" cy="160" r="6" fill="#8b5cf6" />
+                    <!-- Pétalas ao redor -->
+                    <circle cx="260" cy="130" r="7" fill="url(#lavenderFlower)" />
+                    <circle cx="260" cy="190" r="7" fill="url(#lavenderFlower)" />
+                    <circle cx="230" cy="160" r="7" fill="url(#lavenderFlower)" />
+                    <circle cx="290" cy="160" r="7" fill="url(#lavenderFlower)" />
+                </g>
+
+                <!-- Flor 4: Galho Baixo Direita (Vale Café) -->
+                <g class="flower-node" onclick="handleFlowerClick(event, '☕ Acompanha um vale-café pra atualizar os podres', 880.00)">
+                    <rect x="270" y="200" width="36" height="36" rx="18" fill="#ffb694" />
+                    <circle cx="288" cy="218" r="12" fill="#ffffff" />
+                    <text x="288" y="223" font-size="14" text-anchor="middle">☕</text>
+                </g>
+
+                <!-- Flor 5: Galho Baixo Esquerda (Sumiço) -->
+                <g class="flower-node" onclick="handleFlowerClick(event, '✨ 100% livre de cobranças dramáticas!', 587.33)">
+                    <rect x="94" y="194" width="34" height="34" rx="17" fill="#a3c0a6" />
+                    <circle cx="111" cy="211" r="11" fill="#ffffff" />
+                    <text x="111" y="216" font-size="12" text-anchor="middle">✌️</text>
+                </g>
+
+            </svg>
+        </div>
+
+        <!-- Instruction Tag -->
+        <p class="text-xs text-sage-600 font-medium mb-5 animate-pulse text-center">
+            <i class="fa-solid fa-hand-pointer mr-1"></i> Toque nas flores para ver as vantagens deste buquê
+        </p>
+
+        <!-- CARD DA PERGUNTA / INTERAÇÃO PRINCIPAL -->
+        <div class="w-full max-w-sm glass-card rounded-2xl p-5 shadow-lg border border-white text-center">
+            
+            <h3 class="font-display font-bold text-slate-800 text-base md:text-lg mb-1">
+                Colocar os assuntos em dia?
+            </h3>
+            <p class="text-xs text-slate-500 mb-4">
+                Prometo que é um papo leve, sem cobranças e com zero pressão!
+            </p>
+
+            <!-- Buttons Grid -->
+            <div id="buttonContainer" class="flex flex-col sm:flex-row items-center justify-center gap-3 relative min-h-[50px]">
+                
+                <!-- ACCEPT BUTTON -->
+                <button onclick="handleAccept()" class="bounce-btn w-full sm:w-auto px-6 py-2.5 rounded-xl bg-sage-500 hover:bg-sage-600 text-white font-semibold text-xs md:text-sm shadow-md shadow-sage-500/20 flex items-center justify-center gap-2">
+                    <span>Bora! ☕</span>
+                </button>
+
+                <!-- PLAYFUL DODGE / EVASION BUTTON -->
+                <button id="evadeBtn" onclick="handleEvade()" class="bounce-btn w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium text-xs md:text-sm border border-slate-200">
+                    <span id="evadeBtnText">Hum, deixa eu ver... 🤔</span>
+                </button>
+
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="mt-6 text-center text-xs text-slate-400">
+            <p id="displaySender">Enviado por Lucas com intenções 100% amigáveis ✨</p>
+        </footer>
+
+    </main>
+
+    <!-- MODAL DE SUCESSO (Aparece ao clicar em "Bora!") -->
+    <div id="successModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
+        <div id="successModalContent" class="glass-card max-w-sm w-full rounded-3xl p-6 text-center shadow-2xl border border-white transform scale-95 transition-transform duration-300 relative">
+            
+            <button onclick="closeSuccessModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-200">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="w-14 h-14 bg-sage-100 text-sage-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-3 animate-bounce">
+                🎉
+            </div>
+
+            <h3 class="font-display font-bold text-slate-800 text-xl mb-2">
+                Mandou bem! 🙌
+            </h3>
+
+            <p id="successModalText" class="text-xs md:text-sm text-slate-600 mb-6 leading-relaxed">
+                Excelente escolha! O café (ou chá/suco) fica por minha conta. Vamos combinar o dia no WhatsApp?
+            </p>
+
+            <a id="whatsappLink" href="#" target="_blank" class="bounce-btn inline-flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-sm shadow-lg shadow-emerald-500/30 transition-colors">
+                <i class="fa-brands fa-whatsapp text-lg"></i>
+                <span>Combinar no WhatsApp</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- MODAL DE PERSONALIZAÇÃO (Aparece ao clicar na engrenagem) -->
+    <div id="editModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
+        <div id="editModalContent" class="bg-white max-w-sm w-full rounded-2xl p-5 shadow-2xl border border-slate-100 transform scale-95 transition-transform duration-300">
+            
+            <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
+                <h3 class="font-semibold text-slate-800 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-sage-500"></i>
+                    Personalizar Cartão
+                </h3>
+                <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form onsubmit="saveCustomization(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-medium text-slate-600 mb-1">Nome Dela (Destinatária):</label>
+                    <input type="text" id="inputRecipient" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sage-400" placeholder="Ex: Sofia" required>
+                </div>
+
+                <div>
+                    <label class="block font-medium text-slate-600 mb-1">Seu Nome (Remetente):</label>
+                    <input type="text" id="inputSender" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sage-400" placeholder="Ex: Lucas" required>
+                </div>
+
+                <div>
+                    <label class="block font-medium text-slate-600 mb-1">Seu WhatsApp (com DDD):</label>
+                    <input type="tel" id="inputPhone" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sage-400" placeholder="Ex: 5511999999999" required>
+                    <span class="text-[10px] text-slate-400">Inclua o 55 + DDD + Número.</span>
+                </div>
+
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeEditModal()" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-4 py-1.5 rounded-lg bg-sage-500 text-white font-medium shadow-md">
+                        Salvar ✨
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- FLOATING TOAST FOR FLOWER TAGS -->
+    <div id="flowerToast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-800/90 text-white text-xs px-4 py-2.5 rounded-full shadow-xl backdrop-blur-md opacity-0 pointer-events-none transition-all duration-300 flex items-center gap-2 border border-white/20 max-w-[90vw] text-center">
+        <span id="toastText">Carregando...</span>
+    </div>
+
+    <script>
+        /* ===================================================
+           1. ESTADO GLOBAL DA APLICAÇÃO
+        =================================================== */
+        let state = {
+            recipientName: "aninha",
+            senderName: "euu",
+            phone: "5518991979161",
+            audioEnabled: true,
+            evadeCount: 0
+        };
+
+        const evadeMessages = [
+            "Prometo que o café é por minha conta 😉",
+            "E ainda tem direito a sobremesa! 🍰",
+            "Prometo não falar de política nem de ex! 😂",
+            "Tô vendo que esse botão tá tentando me ignorar... 🧐",
+            "Ok, já vi que é um SIM disfarçado! Click no Bora! ☕"
+        ];
+
+        // Carregar configurações salvas
+        function loadSavedState() {
+            const saved = localStorage.getItem('icebreaker_state');
+            if (saved) {
+                try {
+                    state = { ...state, ...JSON.parse(saved) };
+                } catch(e) {}
+            }
+            updateDOMFromState();
+        }
+
+        function updateDOMFromState() {
+            document.getElementById('displayName').innerText = state.recipientName;
+            document.getElementById('displaySender').innerText = `Enviado por ${state.senderName} com intenções 100% amigáveis ✨`;
+            
+            // Atualizar link do WhatsApp
+            const msg = encodeURIComponent(`Oi, ${state.senderName}! Vi o seu buquê desatualizado... Bora tomar esse café e colocar as fofocas em dia! ☕`);
+            const cleanPhone = state.phone.replace(/\D/g, '');
+            document.getElementById('whatsappLink').href = `https://wa.me/${cleanPhone}?text=${msg}`;
+        }
+
+        /* ===================================================
+           2. SINTETIZADOR DE ÁUDIO SUAVE (Web Audio API)
+        =================================================== */
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playPopSound(freq = 600) {
+            if (!state.audioEnabled) return;
+            try {
+                initAudio();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(freq * 1.5, audioCtx.currentTime + 0.08);
+
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.12);
+            } catch(e) {}
+        }
+
+        function toggleAudio() {
+            state.audioEnabled = !state.audioEnabled;
+            document.getElementById('audioText').innerText = state.audioEnabled ? "Som: On" : "Som: Off";
+            if (state.audioEnabled) playPopSound(700);
+        }
+
+        /* ===================================================
+           3. INTERAÇÃO COM AS FLORES
+        =================================================== */
+        let toastTimeout = null;
+        function handleFlowerClick(event, tagText, frequency) {
+            event.stopPropagation();
+            playPopSound(frequency);
+
+            const toast = document.getElementById('flowerToast');
+            const toastText = document.getElementById('toastText');
+
+            toastText.innerText = tagText;
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            toast.classList.add('opacity-100');
+
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0', 'pointer-events-none');
+            }, 2800);
+        }
+
+        /* ===================================================
+           4. LÓGICA DOS BOTÕES E INTERAÇÃO DIVERTIDA
+        =================================================== */
+        function handleEvade() {
+            playPopSound(450);
+            const btnText = document.getElementById('evadeBtnText');
+            
+            if (state.evadeCount < evadeMessages.length) {
+                btnText.innerText = evadeMessages[state.evadeCount];
+                state.evadeCount++;
+            } else {
+                // Se insistir muito, dispara o aceite com humor
+                handleAccept();
+            }
+        }
+
+        function handleAccept() {
+            playPopSound(800);
+            
+            // Disparar Confetes!
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 80,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#a3c0a6', '#ffb694', '#b8a7ea', '#ffd6c2']
+                });
+            }
+
+            openSuccessModal();
+        }
+
+        /* ===================================================
+           5. MODAIS & PERSONALIZAÇÃO
+        =================================================== */
+        function openSuccessModal() {
+            const modal = document.getElementById('successModal');
+            const content = document.getElementById('successModalContent');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modal.classList.add('opacity-100');
+            content.classList.remove('scale-95');
+            content.classList.add('scale-100');
+        }
+
+        function closeSuccessModal() {
+            const modal = document.getElementById('successModal');
+            const content = document.getElementById('successModalContent');
+            modal.classList.remove('opacity-100');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+        }
+
+        function openEditModal() {
+            document.getElementById('inputRecipient').value = state.recipientName;
+            document.getElementById('inputSender').value = state.senderName;
+            document.getElementById('inputPhone').value = state.phone;
+
+            const modal = document.getElementById('editModal');
+            const content = document.getElementById('editModalContent');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modal.classList.add('opacity-100');
+            content.classList.remove('scale-95');
+            content.classList.add('scale-100');
+        }
+
+        function closeEditModal() {
+            const modal = document.getElementById('editModal');
+            const content = document.getElementById('editModalContent');
+            modal.classList.remove('opacity-100');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+        }
+
+        function saveCustomization(e) {
+            e.preventDefault();
+            state.recipientName = document.getElementById('inputRecipient').value.trim() || state.recipientName;
+            state.senderName = document.getElementById('inputSender').value.trim() || state.senderName;
+            state.phone = document.getElementById('inputPhone').value.trim() || state.phone;
+
+            localStorage.setItem('icebreaker_state', JSON.stringify(state));
+            updateDOMFromState();
+            closeEditModal();
+        }
+
+        // Inicialização
+        window.onload = function() {
+            loadSavedState();
+        };
+    </script>
+</body>
+</html>
